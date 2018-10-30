@@ -3,28 +3,23 @@
 
 (add-to-list 'load-path (expand-file-name "init" user-emacs-directory))
 
-(require 'init-packages)
-
 (setq make-backup-files nil)
 
-(show-paren-mode)
-(setq show-paren-delay 0.075)
-
+(require 'init-packages)
 (require 'init-interface)
 (require 'init-editor)
 (require 'init-keybindings)
 (require 'init-evil)
+(require 'init-git)
 (require 'init-scratch)
-
-;; (use-package helm
-;;   :bind (("M-x" . helm-M-x)
-;;          ("C-x C-f" . helm-find-files)
-;;          ("M-b" . helm-buffers-list)))
 
 (use-package rjsx-mode
   :mode "\\.js\\'")
 
-(use-package find-file-in-project)
+(use-package haskell-mode
+  :mode "\\.hs\\'")
+
+(use-package elm-mode)
 
 (use-package flycheck
   :config
@@ -33,19 +28,20 @@
   (flycheck-highlighting-mode nil)
   (flycheck-indication-mode 'left-fringe))
 
-(use-package neotree
+(use-package javascript-eslint)
+
+(use-package tex
+  :ensure auctex
   :custom
-  (neo-smart-open t)
-  :bind
-  ([f8] . 'neotree-show)
-  (:map neotree-mode-map
-        ("j" . neotree-next-line)
-        ("k" . neotree-previous-line)
-        ("h" . neotree-select-up-node)
-        ("l" . neotree-quick-look)
-        ("L" . neotree-enter)
-        ("r" . neotree-rename-node)
-        ("d" . neotree-delete-node)
-        ("c" . neotree-create-node)))
+  (Tex-PDF-mode t))
+
+(use-package tide
+  :ensure t
+  :after (typescript-mode company flycheck)
+  :hook ((typescript-mode . tide-setup)
+         (typescript-mode . tide-hl-identifier-mode)
+         (before-save . tide-format-before-save)))
+
+(server-start)
 
 (provide 'init)

@@ -22,4 +22,20 @@
  scroll-margin 3
  scroll-preserve-screen-position t)
 
+(use-package neotree
+  :custom
+  (neo-smart-open t)
+  (neo-window-width 40)
+  :bind (:map neotree-mode-map
+              ("f" . neotree-stretch-toggle)
+              ("." . neotree-hidden-file-toggle)
+              ("j" . neotree-next-line)
+              ("k" . neotree-previous-line)
+              ("h" . neotree-select-up-node)
+              ("l" . neotree-quick-look)
+              ("L" . neotree-enter)
+              ("r" . neotree-rename-node)
+              ("d" . neotree-delete-node)
+              ("c" . neotree-create-node)))
+
 (provide 'init-editor)
