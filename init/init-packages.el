@@ -8,12 +8,18 @@
 (add-to-list 'package-archives '("melpa" . "http://melpa.org/packages/"))
 (add-to-list 'package-archives '("melpa-stable" . "http://stable.melpa.org/packages/"))
 
-(unless (package-installed-p 'use-package)
-  (package-refresh-contents)
-  (package-install 'use-package))
+(mapc
+ (lambda (package)
+   (if (not (package-installed-p package))
+       (progn
+         (package-refresh-contents)
+         (package-install package))))
+ '(use-package diminish bind-key))
 
 (eval-when-compile
   (require 'use-package))
+(require 'diminish)
+(require 'bind-key)
 
 (setq use-package-always-ensure t)
 

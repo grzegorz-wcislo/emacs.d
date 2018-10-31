@@ -21,15 +21,26 @@
 (scroll-bar-mode 0)
 (blink-cursor-mode 0)
 
-(setq show-paren-delay 0.075
+(setq show-paren-delay 0.025
       show-paren-highlight-openparen t
       show-paren-when-point-inside-paren t)
 (show-paren-mode)
 
-(global-display-line-numbers-mode)
+(add-hook 'text-mode-hook (lambda () (setq display-line-numbers 'relative)))
+(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
 
 (add-to-list 'default-frame-alist '(font . "GohuFont"))
 (setq-default line-spacing nil)
+
+(use-package rainbow-delimiters
+  :hook
+  (prog-mode . rainbow-delimiters-mode))
+
+(use-package solaire-mode
+  :hook
+  ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
+  :config
+  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer))
 
 (use-package ivy
   :custom
@@ -54,14 +65,10 @@
   (doom-neotree-file-icons 1)
   (doom-neotree-enable-variable-pitch nil))
 
-(use-package powerline)
-
-(use-package airline-themes
-  :after powerline
-  :config
-  (load-theme 'airline-doom-one)
-  :custom
-  (airline-display-directory nil))
+(use-package doom-modeline
+  :after all-the-icons
+  :after doom-themes
+  :hook (after-init . doom-modeline-init))
 
 (use-package shackle
   :config

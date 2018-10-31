@@ -6,6 +6,11 @@
          "/git/ignore$"))
 
 (use-package git-gutter
+  :custom
+  (git-gutter:window-width 1)
+  (git-gutter:added-sign "|")
+  (git-gutter:deleted-sign "|")
+  (git-gutter:modified-sign "|")
   :config
   (global-git-gutter-mode))
 

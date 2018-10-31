@@ -1,6 +1,4 @@
-(defun air--config-evil ()
-  "Configure evil mode."
-
+(defun config-evil ()
   (define-key evil-normal-state-map [escape] 'keyboard-quit)
   (define-key evil-visual-state-map [escape] 'keyboard-quit)
   (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
@@ -15,16 +13,16 @@
   (delete 'eshell-mode evil-insert-state-modes))
 
 (use-package evil
+  :custom
+  (evil-echo-state nil)
   :config
-  (add-hook 'evil-mode-hook 'air--config-evil)
+  (add-hook 'evil-mode-hook 'config-evil)
   (evil-mode 1))
 
 (use-package evil-commentary
-  :requires evil
   :config (evil-commentary-mode t))
 
 (use-package evil-surround
-  :requires evil
   :config (global-evil-surround-mode t))
 
 (provide 'init-evil)
