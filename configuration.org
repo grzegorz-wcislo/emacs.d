@@ -1,0 +1,635 @@
+#+TITLE: Emacs Configuration
+#+AUTHOR: Grzegorz Wcisło
+
+* Sources
+
+I was inspired by the following =emacs= configs:
+
+- [[https://github.com/syl20bnr/spacemacs][spacemacs]]
+- [[https://github.com/hlissner/doom-emacs][doom emacs]]
+- [[https://github.com/aaronbieber/dotfiles][Aaron Bieber's dotfiles]]
+- [[https://github.com/hrs/dotfiles][hrs's dotfiles]]
+- [[https://github.com/ppiotrowicz/emacs.d][ppiotrowicz emacs]]
+- [[https://github.com/suyashbire1/emacs.d][Suyash Bire's spacemacs lite]]
+
+* Defaults
+** Memory and files
+
+Allow 20MB of memory before calling garbage collection (default: 0.76MB).
+
+#+BEGIN_SRC emacs-lisp
+(setq gc-cons-threshold 20000000)
+#+END_SRC
+
+Refresh buffers when corresponding file was changed on disk.
+
+#+BEGIN_SRC emacs-lisp
+(global-auto-revert-mode 1)
+#+END_SRC
+
+Backup files to =/tmp= directory instead of the same directory as the file.
+
+#+BEGIN_SRC emacs-lisp
+(setq backup-directory-alist
+      `((".*" . ,temporary-file-directory)))
+(setq auto-save-file-name-transforms
+      `((".*" ,temporary-file-directory t)))
+#+END_SRC
+
+** Editing text
+
+Use tabs instead of spaces.
+
+#+BEGIN_SRC emacs-lisp
+(setq-default
+ indent-tabs-mode nil
+ tab-always-indent t
+ tab-width 2)
+#+END_SRC
+
+Requre final newline.
+
+#+BEGIN_SRC emacs-lisp
+(setq require-final-newline t)
+#+END_SRC
+
+Set sensible scrolling.
+
+#+BEGIN_SRC emacs-lisp
+(setq-default
+ hscroll-margin 3
+ hscroll-step 3
+ scroll-conservatively 9999
+ scroll-margin 3
+ scroll-preserve-screen-position t)
+#+END_SRC
+
+Disable line wrap.
+
+#+BEGIN_SRC emacs-lisp
+(global-visual-line-mode -1)
+(setq-default
+ truncate-lines t
+ truncate-partial-width-windows 50
+ visual-fill-column-center-text nil
+ word-wrap t)
+#+END_SRC
+
+Treat CamelCase as separate words.
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'prog-mode-hook 'subword-mode)
+#+END_SRC
+
+** Visuals
+
+Set font.
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'default-frame-alist '(font . "GohuFont"))
+(setq-default line-spacing nil)
+#+END_SRC
+
+Inhibit startup message.
+
+#+BEGIN_SRC emacs-lisp
+
+(setq inhibit-startup-screen t
+      inhibit-splash-screen t
+      inhibit-startup-echo-area-message t
+      initial-scratch-message nil)
+#+END_SRC
+
+Shorten yes or no question.
+
+#+BEGIN_SRC emacs-lisp
+(defalias 'yes-or-no-p 'y-or-n-p)
+(setq confirm-kill-emacs (lambda (_) (y-or-n-p "››› Quit?")))
+#+END_SRC
+
+Configure fringe indicators.
+
+#+BEGIN_SRC emacs-lisp
+(setq-default indicate-buffer-boundaries 'left
+              indicate-empty-lines nil
+              fringes-outside-margins t
+              fringe-indicator-alist
+              (delq
+               (assq 'continuation fringe-indicator-alist)
+               fringe-indicator-alist))
+#+END_SRC
+
+Hide redundant indicators and bars.
+
+#+BEGIN_SRC emacs-lisp
+(menu-bar-mode 0)
+(tool-bar-mode 0)
+(scroll-bar-mode 0)
+(blink-cursor-mode 0)
+#+END_SRC
+
+Enable syntax highlighting everywhere.
+
+#+BEGIN_SRC emacs-lisp
+(global-font-lock-mode t)
+#+END_SRC
+
+Display relative line numbers.
+
+#+BEGIN_SRC emacs-lisp
+(add-hook 'text-mode-hook (lambda () (setq display-line-numbers 'relative)))
+(add-hook 'prog-mode-hook (lambda () (setq display-line-numbers 'relative)))
+#+END_SRC
+
+Always highlight parentheses
+
+#+BEGIN_SRC emacs-lisp
+(setq show-paren-delay 0
+      show-paren-highlight-openparen t
+      show-paren-when-point-inside-paren t)
+(show-paren-mode)
+#+END_SRC
+
+Flash the screen instead of ringing bell.
+
+#+BEGIN_SRC emacs-lisp
+(setq visible-bell t)
+#+END_SRC
+
+** Scratch buffer
+
+Use =fortune= and =cowasy= to generate a philosophical welcome message.
+
+#+BEGIN_SRC emacs-lisp
+(setenv "LC_ALL" "en_US.UTF-8")
+(setenv "LANG" "en_US")
+
+(setq initial-scratch-message
+      (format
+       ";; %s\n\n"
+       (replace-regexp-in-string
+        "\n" "\n;; "
+        (replace-regexp-in-string
+         "\n$" ""
+         (shell-command-to-string "fortune | cowsay")))))
+#+END_SRC
+
+* External Packages
+** Configure =use-package=
+
+[[https://jwiegley.github.io/use-package/][manual]]
+
+=Use-package= is an essential component of this config. I ensure it is installed
+in the =init.el= file.
+
+Always install missing packages. This should allow for an easy fresh
+installation.
+
+#+BEGIN_SRC emacs-lisp
+(setq use-package-always-ensure t)
+#+END_SRC
+
+Always compile and use fresh packages.
+
+#+BEGIN_SRC emacs-lisp
+(use-package auto-compile
+  :config (auto-compile-on-load-mode))
+
+(setq load-prefer-newer t)
+#+END_SRC
+
+** Configure =general.el=
+
+[[https://github.com/noctuid/general.el#general-examples][manual]]
+
+Use =which-key= to help me remember keybindings.
+
+#+BEGIN_SRC emacs-lisp
+(use-package which-key
+  :config (which-key-mode 1))
+#+END_SRC
+
+Use =general.el= to manage all =SPC= and =,= keybindings.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package general
+    :config
+    (general-override-mode 1)
+
+    (general-create-definer space-def
+      :states '(normal visual insert motion emacs)
+      :prefix "SPC"
+      :non-normal-prefix "C-SPC")
+
+    (general-create-definer comma-def
+      :states '(normal insert)
+      :prefix ","
+      :non-normal-prefix "C-,")
+
+    (space-def
+      ""     nil
+      ":"   'execute-extended-command
+
+      "c"   (general-simulate-key "C-c" :which-key "C-c")
+      "h"   (general-simulate-key "C-h" :which-key "C-h")
+      "u"   (general-simulate-key "C-u" :which-key "C-u")
+      "x"   (general-simulate-key "C-x" :which-key "C-x")
+
+      "w"   '(:ignore t :which-key "Windows")
+      "ww"  'other-window
+      "w\\" 'split-window-right
+      "w-"  'split-window-below
+      "w="  'balance-windows
+      "wo"  'delete-other-windows
+      "wh"  'winner-undo
+      "wl"  'winner-redo
+
+      "b"   '(:ignore t :which-key "Buffers")
+      "bb"  'mode-line-other-buffer
+      "bd"  'kill-this-buffer
+      "b]"  'next-buffer
+      "b["  'previous-buffer
+      "bq"  'kill-buffer-and-window
+      "bR"  'rename-file-and-buffer
+      "br"  'revert-buffer)
+
+    (general-define-key
+     "M-q" 'delete-window))
+#+END_SRC
+
+** Configure =evil-mode=
+
+[[https://github.com/emacs-evil/evil][manual]]
+
+Enable =evil-mode=.
+
+#+BEGIN_SRC emacs-lisp
+  (use-package evil
+    :custom
+    (evil-echo-state nil)
+
+    :config
+    (evil-mode 1)
+
+    :general
+    (general-define-key
+     "M-h" 'evil-window-left
+     "M-j" 'evil-window-down
+     "M-k" 'evil-window-up
+     "M-l" 'evil-window-right))
+#+END_SRC
+
+Enable =surround=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil-surround
+  :config (global-evil-surround-mode t))
+#+END_SRC
+
+Enable =commentary=.
+
+#+BEGIN_SRC emacs-lisp
+(use-package evil-commentary
+  :config (evil-commentary-mode t))
+#+END_SRC
+
+** Configure =ivy= and =counsel=
+
+[[http://oremacs.com/swiper/][manual]]
+
+Configure ivy completion.
+
+#+BEGIN_SRC emacs-lisp
+(use-package ivy
+  :custom
+  (ivy-use-virtual-buffers t)
+  (ivy-count-format "%d/%d "))
+#+END_SRC
+
+Configure counsel search.
+
+#+BEGIN_SRC emacs-lisp
+(use-package counsel
+  :after ivy
+
+  :general
+  (general-define-key
+   "M-x"   'counsel-M-x
+   "C-h f" 'counsel-describe-function
+   "C-h v" 'counsel-describe-variable)
+
+  (space-def
+   ":" 'counsel-M-x))
+#+END_SRC
+
+** Configure =shackle=
+
+[[https://github.com/wasamasa/shackle][manual]]
+
+Use shackle to keep =neotree= on the right and keep other buffers in check.
+
+#+BEGIN_SRC emacs-lisp
+(use-package shackle
+  :config
+  (shackle-mode)
+
+  :custom
+  (shackle-rules '((neotree-mode :align left)))
+  (shackle-default-rule '(:select t)))
+#+END_SRC
+
+** Configure =neotree=
+
+[[https://github.com/jaypei/emacs-neotree][manual]]
+
+Neotree project dir helper function.
+
+#+BEGIN_SRC emacs-lisp
+(defun gw/neotree-project-dir ()
+    "Open NeoTree using the projectile root if possible."
+  (interactive)
+    (let ((project-dir (projectile-project-root))
+          (file-name (buffer-file-name)))
+      (neotree-toggle)
+      (if project-dir
+          (if (neo-global--window-exists-p)
+              (progn
+                (neotree-dir project-dir)
+                (neotree-find file-name))))))
+#+END_SRC
+
+Use neotree with custom =vi= keybindings.
+
+#+BEGIN_SRC emacs-lisp
+(use-package neotree
+  :custom
+  (neo-smart-open t)
+  (neo-window-width 40)
+
+  :bind (:map neotree-mode-map
+              ("f" . neotree-stretch-toggle)
+              ("." . neotree-hidden-file-toggle)
+              ("j" . neotree-next-line)
+              ("k" . neotree-previous-line)
+              ("h" . neotree-select-up-node)
+              ("l" . neotree-quick-look)
+              ("L" . neotree-enter)
+              ("r" . neotree-rename-node)
+              ("d" . neotree-delete-node)
+              ("c" . neotree-create-node))
+
+  :general
+  (general-define-key
+   "M-e" 'gw/neotree-project-dir))
+#+END_SRC
+
+** Configure =projectile=
+
+[[https://www.projectile.mx/en/latest/][manual]]
+
+Configure =projectile= to use my project paths and =ivy= completion.
+
+#+BEGIN_SRC emacs-lisp
+(use-package projectile
+  :custom
+  (projectile-project-search-path '("~/Personal_Projects/" "~/University/"))
+  (projectile-command-map nil)
+  (projectile-completion-system 'ivy)
+
+  :config
+  (projectile-mode 1)
+
+  :general
+  (space-def
+   "p"   '(:ignore t :which-key "Project")
+   "pp"  'projectile-switch-project
+   "pf"  'projectile-find-file
+   "pc"  'projectile-compile-project
+   "pb"  'projectile-switch-to-buffer
+   "pk"  'projectile-kill-buffers
+   "ps"  'projectile-run-eshell
+   "pt"  'projectile-toggle-between-implementation-and-test))
+#+END_SRC
+
+** Configure =flycheck=
+
+[[https://www.flycheck.org/en/latest/][manual]]
+
+Use =flycheck= wherever possible, show errors on the side.
+
+#+BEGIN_SRC emacs-lisp
+(use-package flycheck
+  :config
+  (global-flycheck-mode)
+
+  :custom
+  (flycheck-highlighting-mode nil)
+  (flycheck-indication-mode 'left-fringe)
+
+  :general
+  (space-def
+   "e"   '(:ignore t :which-key "Errors")
+   "ed"  'flycheck-disable-checker
+   "ee"  'flycheck-list-errors
+   "em"  'flycheck-mode
+   "en"  'flycheck-next-error
+   "ep"  'flycheck-previous-error
+   "eb"  'flycheck-buffer))
+#+END_SRC
+
+** Configure =dumb-jump=
+
+[[https://github.com/jacktasia/dumb-jump][manual]]
+
+Use dumb jump as the default way of jumping to stuffs.
+
+#+BEGIN_SRC emacs-lisp
+(use-package dumb-jump
+  :custom
+  (dumb-jump-selector 'ivy)
+  (dumb-jump-aggressive nil)
+  (dumb-jump-force-searcher 'ag)
+
+  :general
+  (space-def
+   "j"   '(:ignore t :which-key "Jump")
+   "jj"  'dumb-jump-go
+   "jb"  'dumb-jump-back))
+#+END_SRC
+
+** Configure =company-mode=
+
+[[http://company-mode.github.io/][manual]]
+
+Use company mode for auto completion.
+
+#+BEGIN_SRC emacs-lisp
+(use-package company
+  :config
+  (global-company-mode))
+#+END_SRC
+
+** Confiture =git=
+*** =Magit=
+
+[[https://magit.vc/][manual]]
+
+Use =magit= to work with git repositories.
+
+#+BEGIN_SRC emacs-lisp
+(use-package magit
+  :general
+  (space-def
+   "g"   '(:ignore t :which-key "Git")
+   "gs"  'magit-status
+   "gd"  'magit-diff-unstaged
+   "gl"  'magit-log-current))
+#+END_SRC
+
+*** =git-gutter=
+
+[[https://github.com/syohex/emacs-git-gutter][manual]]
+
+Use =git-gutter= to show modified lines and work with hunks.
+
+#+BEGIN_SRC emacs-lisp
+(use-package git-gutter
+  :custom
+  (git-gutter:window-width 1)
+  (git-gutter:added-sign "|")
+  (git-gutter:deleted-sign "|")
+  (git-gutter:modified-sign "|")
+
+  :config
+  (global-git-gutter-mode)
+
+  :general
+  (space-def
+   "g"   '(:ignore t :which-key "Git")
+   "gh"  '(:ignore t :which-key "Hunks")
+   "ghn" 'git-gutter:next-hunk
+   "ghp" 'git-gutter:previous-hunk
+   "ghd" 'git-gutter:popup-hunk
+   "ghs" 'git-gutter:stage-hunk
+   "ghr" 'git-gutter:revert-hunk))
+#+END_SRC
+
+*** =gitignore-mode=
+
+[[https://github.com/magit/git-modes][manual]]
+
+Use =.gitignore= syntax highlighting.
+
+#+BEGIN_SRC emacs-lisp
+(use-package gitignore-mode
+  :mode ("/\\.gitignore$"
+         "/\\.git/info/exclude$"
+         "/git/ignore$"))
+#+END_SRC
+
+* Programming languages
+** Elixir
+
+#+BEGIN_SRC emacs-lisp
+(use-package elixir-mode
+  :mode "\\.ex\\'")
+
+(use-package alchemist)
+#+END_SRC
+
+** Elm
+
+#+BEGIN_SRC emacs-lisp
+(use-package elm-mode)
+#+END_SRC
+
+** Haskell
+
+#+BEGIN_SRC emacs-lisp
+(use-package haskell-mode
+  :mode "\\.hs\\'")
+#+END_SRC
+
+** JavaScript
+
+#+BEGIN_SRC emacs-lisp
+(use-package rjsx-mode
+  :mode "\\.js\\'")
+#+END_SRC
+
+** LaTeX
+
+#+BEGIN_SRC emacs-lisp
+(use-package tex
+  :ensure auctex)
+#+END_SRC
+
+** RESTclient
+
+#+BEGIN_SRC emacs-lisp
+(use-package restclient
+  :mode (("\\.http\\'" . restclient-mode)))
+#+END_SRC
+
+* Themes and colorschemes
+** DOOOOM!!!
+
+[[https://github.com/hlissner/emacs-doom-themes][manual]]
+
+Install fonts used by =doom=
+
+#+BEGIN_SRC emacs-lisp
+(use-package all-the-icons)
+#+END_SRC
+
+Configure =doom= theme.
+
+#+BEGIN_SRC emacs-lisp
+(use-package doom-themes
+  :after all-the-icons
+
+  :config
+  (load-theme 'doom-vibrant t)
+  (doom-themes-visual-bell-config)
+  (doom-themes-neotree-config)
+  (doom-themes-org-config)
+
+  :custom
+  (doom-themes-enable-bold t)
+  (doom-themes-enable-italic t)
+  (doom-neotree-file-icons 1)
+  (doom-neotree-enable-variable-pitch nil))
+#+END_SRC
+
+Configure =doom= modeline.
+
+#+BEGIN_SRC emacs-lisp
+(use-package doom-modeline
+  :after all-the-icons
+  :after doom-themes
+  :hook (after-init . doom-modeline-init))
+#+END_SRC
+
+** Solaire
+
+[[https://github.com/hlissner/emacs-solaire-mode][manual]]
+
+Solaire mode highlighs =real= buffers.
+
+#+BEGIN_SRC emacs-lisp
+(use-package solaire-mode
+  :hook
+  ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
+  :config
+  (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer))
+#+END_SRC
+
+** Rainbow
+
+Use rainbow parentheses when programming.
+
+#+BEGIN_SRC emacs-lisp
+(use-package rainbow-delimiters
+  :hook
+  (prog-mode . rainbow-delimiters-mode))
+#+END_SRC
