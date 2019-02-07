@@ -75,12 +75,6 @@ Disable line wrap:
  word-wrap t)
 #+END_SRC
 
-Treat CamelCase as separate words.
-
-#+BEGIN_SRC emacs-lisp
-(add-hook 'prog-mode-hook 'subword-mode)
-#+END_SRC
-
 ** Visuals
 
 Set font:
@@ -154,6 +148,14 @@ Flash the screen instead of ringing bell:
 
 #+BEGIN_SRC emacs-lisp
 (setq visible-bell t)
+#+END_SRC
+
+** Navigation
+
+Use winner mode to remember window configuartion history:
+
+#+BEGIN_SRC emacs-lisp
+  (winner-mode 1)
 #+END_SRC
 
 ** Scratch buffer
@@ -257,11 +259,51 @@ Use =general.el= to manage all =SPC= and =,= keybindings:
      "M-q" 'delete-window))
 #+END_SRC
 
+** Configure =hydra=
+
+[[https://github.com/abo-abo/hydra][manual]]
+
+Use =hydra= and define a window resizing hydra:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package hydra
+  :config
+  (defhydra hydra-window (:hint nil)
+    "Resize windows"
+    ("h" shrink-window-horizontally)
+    ("l" enlarge-window-horizontally)
+    ("k" enlarge-window)
+    ("j" shrink-window)
+    ("=" balance-windows))
+
+  :general
+  (space-def
+    "wr"  '(hydra-window/body :which-key "resize")))
+#+END_SRC
+
 ** Configure =evil-mode=
 
 [[https://github.com/emacs-evil/evil][manual]]
 
-Enable =evil-mode=.
+Configure =evil= behavior:
+
+#+BEGIN_SRC emacs-lisp
+(defun gw/config-evil ()
+  (define-key evil-normal-state-map [escape] 'keyboard-quit)
+  (define-key evil-visual-state-map [escape] 'keyboard-quit)
+  (define-key minibuffer-local-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-ns-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-completion-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-must-match-map [escape] 'minibuffer-keyboard-quit)
+  (define-key minibuffer-local-isearch-map [escape] 'minibuffer-keyboard-quit)
+
+  (dolist (mode '(dired-mode neotree-mode eshell-mode term-mode))
+    (add-to-list 'evil-emacs-state-modes mode))
+  (delete 'term-mode evil-insert-state-modes)
+  (delete 'eshell-mode evil-insert-state-modes))
+#+END_SRC
+
+Enable =evil-mode=:
 
 #+BEGIN_SRC emacs-lisp
   (use-package evil
@@ -269,6 +311,7 @@ Enable =evil-mode=.
     (evil-echo-state nil)
 
     :config
+    (add-hook 'evil-mode-hook 'gw/config-evil)
     (evil-mode 1)
 
     :general
@@ -300,26 +343,39 @@ Enable =commentary=:
 Configure ivy completion:
 
 #+BEGIN_SRC emacs-lisp
-(use-package ivy
-  :custom
-  (ivy-use-virtual-buffers t)
-  (ivy-count-format "%d/%d "))
+  (use-package ivy
+    :custom
+    (ivy-use-virtual-buffers t)
+    (ivy-count-format "%d/%d "))
 #+END_SRC
 
 Configure counsel search:
 
 #+BEGIN_SRC emacs-lisp
-(use-package counsel
-  :after ivy
+  (use-package counsel
+    :after ivy
 
-  :general
-  (general-define-key
-   "M-x"   'counsel-M-x
-   "C-h f" 'counsel-describe-function
-   "C-h v" 'counsel-describe-variable)
+    :config
+    (counsel-mode 1)
 
-  (space-def
-   ":" 'counsel-M-x))
+    ;; :general
+    ;; (general-define-key
+    ;;  "M-x"   'counsel-M-x
+    ;;  "C-h f" 'counsel-describe-function
+    ;;  "C-h v" 'counsel-describe-variable)
+
+    (space-def
+     ":" 'counsel-M-x))
+#+END_SRC
+
+Use swiper for convenient searching:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package swiper
+    :general
+    (space-def
+      "/"   '(:ignore t :which-key "Search")
+      "//"  'swiper))
 #+END_SRC
 
 ** Configure =shackle=
@@ -361,26 +417,25 @@ Neotree project dir helper function:
 Use neotree with custom =vi= keybindings:
 
 #+BEGIN_SRC emacs-lisp
-(use-package neotree
-  :custom
-  (neo-smart-open t)
-  (neo-window-width 40)
+  (use-package neotree
+    :custom
+    (neo-smart-open t)
+    (neo-window-width 40)
 
-  :bind (:map neotree-mode-map
-              ("f" . neotree-stretch-toggle)
-              ("." . neotree-hidden-file-toggle)
-              ("j" . neotree-next-line)
-              ("k" . neotree-previous-line)
-              ("h" . neotree-select-up-node)
-              ("l" . neotree-quick-look)
-              ("L" . neotree-enter)
-              ("r" . neotree-rename-node)
-              ("d" . neotree-delete-node)
-              ("c" . neotree-create-node))
-
-  :general
-  (general-define-key
-   "M-e" 'gw/neotree-project-dir))
+    :general
+    (general-define-key
+     "M-e" 'gw/neotree-project-dir)
+    (:keymaps 'neotree-mode-map
+              "f" 'neotree-stretch-toggle
+              "." 'neotree-hidden-file-toggle
+              "j" 'neotree-next-line
+              "k" 'neotree-previous-line
+              "h" 'neotree-select-up-node
+              "l" 'neotree-quick-look
+              "L" 'neotree-enter
+              "r" 'neotree-rename-node
+              "d" 'neotree-delete-node
+              "c" 'neotree-create-node))
 #+END_SRC
 
 ** Configure =projectile=
@@ -392,7 +447,7 @@ Configure =projectile= to use my project paths and =ivy= completion:
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
   :custom
-  (projectile-project-search-path '("~/Personal_Projects/" "~/University/"))
+  (projectile-project-search-path '("~/Personal_Projects/" "~/University/" "~/Work"))
   (projectile-command-map nil)
   (projectile-completion-system 'ivy)
 
@@ -477,13 +532,13 @@ Use company mode for auto completion:
 Use =magit= to work with git repositories:
 
 #+BEGIN_SRC emacs-lisp
-(use-package magit
-  :general
-  (space-def
-   "g"   '(:ignore t :which-key "Git")
-   "gs"  'magit-status
-   "gd"  'magit-diff-unstaged
-   "gl"  'magit-log-current))
+  (use-package magit
+    :general
+    (space-def
+     "g"   '(:ignore t :which-key "Git")
+     "gs"  'magit-status
+     "gd"  'magit-diff-unstaged
+     "gl"  'magit-log-current))
 #+END_SRC
 
 *** =git-gutter=
@@ -493,25 +548,25 @@ Use =magit= to work with git repositories:
 Use =git-gutter= to show modified lines and work with hunks:
 
 #+BEGIN_SRC emacs-lisp
-(use-package git-gutter
-  :custom
-  (git-gutter:window-width 1)
-  (git-gutter:added-sign "|")
-  (git-gutter:deleted-sign "|")
-  (git-gutter:modified-sign "|")
+  (use-package git-gutter
+    :custom
+    (git-gutter:window-width 1)
+    (git-gutter:added-sign "|")
+    (git-gutter:deleted-sign "|")
+    (git-gutter:modified-sign "|")
 
-  :config
-  (global-git-gutter-mode)
+    :config
+    (add-to-list 'git-gutter:update-hooks 'focus-in-hook)
 
-  :general
-  (space-def
-   "g"   '(:ignore t :which-key "Git")
-   "gh"  '(:ignore t :which-key "Hunks")
-   "ghn" 'git-gutter:next-hunk
-   "ghp" 'git-gutter:previous-hunk
-   "ghd" 'git-gutter:popup-hunk
-   "ghs" 'git-gutter:stage-hunk
-   "ghr" 'git-gutter:revert-hunk))
+    :general
+    (space-def
+     "g"   '(:ignore t :which-key "Git")
+     "gh"  '(:ignore t :which-key "Hunks")
+     "ghn" 'git-gutter:next-hunk
+     "ghp" 'git-gutter:previous-hunk
+     "ghd" 'git-gutter:popup-hunk
+     "ghs" 'git-gutter:stage-hunk
+     "ghr" 'git-gutter:revert-hunk))
 #+END_SRC
 
 *** =gitignore-mode=
@@ -525,6 +580,106 @@ Use =.gitignore= syntax highlighting:
   :mode ("/\\.gitignore$"
          "/\\.git/info/exclude$"
          "/git/ignore$"))
+#+END_SRC
+
+** Confugure =engine-mode=
+
+[[https://github.com/hrs/engine-mode][manual]]
+
+Engine mode allows for searching and openings search results in a
+browser using an arbitrary search engine (=%s= is replaced either by
+selected text or entered text):
+
+#+BEGIN_SRC emacs-lisp
+  (use-package engine-mode
+    :config
+    (engine-mode 1)
+    (defengine duckduckgo
+    "https://duckduckgo.com/?q=%s")
+    (defengine github
+    "https://github.com/search?ref=simplesearch&q=%s")
+    (defengine stack-overflow
+    "https://stackoverflow.com/search?q=%s")
+    (defengine wikipedia
+    "http://www.wikipedia.org/search-redirect.php?language=en&go=Go&search=%s")
+    (defengine wolfram-alpha
+    "http://www.wolframalpha.com/input/?i=%s")
+
+    :general
+    (space-def
+      "/"   '(:ignore t :which-key "Search")
+      "/d"  '(engine/search-duckduckgo :which-key "DuckDuckGo")
+      "/g"  '(engine/search-github :which-key "GitHub")
+      "/s"  '(engine/search-stack-overflow :which-key "Stack Overflow")
+      "/w"  '(engine/search-wikipedia :which-key "Wikipedia")
+      "/a"  '(engine/search-wolfram-alpha :which-key "Wolfram Alpha")))
+#+END_SRC
+
+* Applications
+** =org-mode=
+
+[[https://orgmode.org/][manual]]
+
+Use =org-mode=
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org)
+#+END_SRC
+
+Use syntax highlighting in source blocks while editing:
+
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-fontify-natively t)
+#+END_SRC
+
+Make TAB act as if it were issued in a buffer of the language’s major mode:
+
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-tab-acts-natively t)
+#+END_SRC
+
+When editing a code snippet, use the current window rather than
+popping open a new one (which shows the same information):
+
+#+BEGIN_SRC emacs-lisp
+  (setq org-src-window-setup 'current-window)
+#+END_SRC
+
+Quickly insert a block of elisp:
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'org-structure-template-alist
+             '("el" "#+BEGIN_SRC emacs-lisp\n?\n#+END_SRC"))
+#+END_SRC
+
+Quickly insert a block of bash:
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'org-structure-template-alist
+             '("sh" "#+BEGIN_SRC sh\n?\n#+END_SRC"))
+#+END_SRC
+
+Quickly insert a block of ruby:
+
+#+BEGIN_SRC emacs-lisp
+(add-to-list 'org-structure-template-alist
+             '("rb" "#+BEGIN_SRC ruby\n?\n#+END_SRC"))
+#+END_SRC
+
+Allow babel to evaluate source blocks:
+
+#+BEGIN_SRC emacs-lisp
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((emacs-lisp . t)
+   (shell . t)
+   (ruby . t)))
+#+END_SRC
+
+Don't ask before evaluating source blocks:
+
+#+BEGIN_SRC emacs-lisp
+(setq org-confirm-babel-evaluate nil)
 #+END_SRC
 
 * Programming languages
@@ -571,7 +726,72 @@ Use =.gitignore= syntax highlighting:
   :mode (("\\.http\\'" . restclient-mode)))
 #+END_SRC
 
-* Themes and colorschemes
+** TypeScript
+
+[[https://github.com/ananthakumaran/tide][manual]]
+
+Use =flycheck=, =eldoc= and =company-mode= with =tide=:
+
+#+BEGIN_SRC emacs-lisp
+  (defun gw/setup-tide-mode ()
+    (interactive)
+    (tide-setup)
+    (flycheck-mode +1)
+    (setq flycheck-check-syntax-automatically '(save mode-enabled))
+    (eldoc-mode +1)
+    (tide-hl-identifier-mode +1)
+    (company-mode +1)
+    (setq tide-format-options '(:indentSize 2))
+    (setq typescript-indent-level 2
+          typescript-expr-indent-offset 2))
+#+END_SRC
+
+Install =typesccript-mode=
+
+#+BEGIN_SRC emacs-lisp
+  (use-package typescript-mode)
+#+END_SRC
+
+Setup =tide= and relevant hooks:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package tide
+    :after (typescript-mode company flycheck)
+
+    :hook ((typescript-mode . tide-setup)
+           (typescript-mode . tide-hl-identifier-mode)))
+#+END_SRC
+
+** YAML
+
+Use syntax highlighting for =yaml= files:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package yaml-mode)
+#+END_SRC
+
+* Prose
+
+** =proselint=
+
+#+BEGIN_SRC emacs-lisp
+(require 'flycheck)
+
+(flycheck-define-checker proselint
+  "A linter for prose."
+  :command ("proselint" source-inplace)
+  :error-patterns
+  ((warning line-start (file-name) ":" line ":" column ": "
+            (id (one-or-more (not (any " "))))
+            (message (one-or-more not-newline)
+                     (zero-or-more "\n" (any " ") (one-or-more not-newline)))
+            line-end))
+  :modes (text-mode markdown-mode org-mode))
+
+(add-to-list 'flycheck-checkers 'proselint)
+#+END_SRC
+
+* Themes and color schemes
 ** DOOOOM!!!
 
 [[https://github.com/hlissner/emacs-doom-themes][manual]]
