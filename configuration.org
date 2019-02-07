@@ -15,19 +15,19 @@ I was inspired by the following =emacs= configs:
 * Defaults
 ** Memory and files
 
-Allow 20MB of memory before calling garbage collection (default: 0.76MB).
+Allow 20MB of memory before calling garbage collection (default: 0.76MB):
 
 #+BEGIN_SRC emacs-lisp
 (setq gc-cons-threshold 20000000)
 #+END_SRC
 
-Refresh buffers when corresponding file was changed on disk.
+Refresh buffers when corresponding file was changed on disk:
 
 #+BEGIN_SRC emacs-lisp
 (global-auto-revert-mode 1)
 #+END_SRC
 
-Backup files to =/tmp= directory instead of the same directory as the file.
+Backup files to =/tmp= directory instead of the same directory as the file:
 
 #+BEGIN_SRC emacs-lisp
 (setq backup-directory-alist
@@ -38,7 +38,7 @@ Backup files to =/tmp= directory instead of the same directory as the file.
 
 ** Editing text
 
-Use tabs instead of spaces.
+Use tabs instead of spaces:
 
 #+BEGIN_SRC emacs-lisp
 (setq-default
@@ -47,13 +47,13 @@ Use tabs instead of spaces.
  tab-width 2)
 #+END_SRC
 
-Requre final newline.
+Requre final newline:
 
 #+BEGIN_SRC emacs-lisp
 (setq require-final-newline t)
 #+END_SRC
 
-Set sensible scrolling.
+Set sensible scrolling:
 
 #+BEGIN_SRC emacs-lisp
 (setq-default
@@ -64,7 +64,7 @@ Set sensible scrolling.
  scroll-preserve-screen-position t)
 #+END_SRC
 
-Disable line wrap.
+Disable line wrap:
 
 #+BEGIN_SRC emacs-lisp
 (global-visual-line-mode -1)
@@ -83,14 +83,14 @@ Treat CamelCase as separate words.
 
 ** Visuals
 
-Set font.
+Set font:
 
 #+BEGIN_SRC emacs-lisp
 (add-to-list 'default-frame-alist '(font . "GohuFont"))
 (setq-default line-spacing nil)
 #+END_SRC
 
-Inhibit startup message.
+Inhibit startup message:
 
 #+BEGIN_SRC emacs-lisp
 
@@ -100,14 +100,14 @@ Inhibit startup message.
       initial-scratch-message nil)
 #+END_SRC
 
-Shorten yes or no question.
+Shorten yes or no question:
 
 #+BEGIN_SRC emacs-lisp
 (defalias 'yes-or-no-p 'y-or-n-p)
 (setq confirm-kill-emacs (lambda (_) (y-or-n-p "››› Quit?")))
 #+END_SRC
 
-Configure fringe indicators.
+Configure fringe indicators:
 
 #+BEGIN_SRC emacs-lisp
 (setq-default indicate-buffer-boundaries 'left
@@ -119,7 +119,7 @@ Configure fringe indicators.
                fringe-indicator-alist))
 #+END_SRC
 
-Hide redundant indicators and bars.
+Hide redundant indicators and bars:
 
 #+BEGIN_SRC emacs-lisp
 (menu-bar-mode 0)
@@ -128,13 +128,13 @@ Hide redundant indicators and bars.
 (blink-cursor-mode 0)
 #+END_SRC
 
-Enable syntax highlighting everywhere.
+Enable syntax highlighting everywhere:
 
 #+BEGIN_SRC emacs-lisp
 (global-font-lock-mode t)
 #+END_SRC
 
-Display relative line numbers.
+Display relative line numbers:
 
 #+BEGIN_SRC emacs-lisp
 (add-hook 'text-mode-hook (lambda () (setq display-line-numbers 'relative)))
@@ -150,7 +150,7 @@ Always highlight parentheses
 (show-paren-mode)
 #+END_SRC
 
-Flash the screen instead of ringing bell.
+Flash the screen instead of ringing bell:
 
 #+BEGIN_SRC emacs-lisp
 (setq visible-bell t)
@@ -158,7 +158,7 @@ Flash the screen instead of ringing bell.
 
 ** Scratch buffer
 
-Use =fortune= and =cowasy= to generate a philosophical welcome message.
+Use =fortune= and =cowasy= to generate a philosophical welcome message:
 
 #+BEGIN_SRC emacs-lisp
 (setenv "LC_ALL" "en_US.UTF-8")
@@ -183,13 +183,13 @@ Use =fortune= and =cowasy= to generate a philosophical welcome message.
 in the =init.el= file.
 
 Always install missing packages. This should allow for an easy fresh
-installation.
+installation:
 
 #+BEGIN_SRC emacs-lisp
 (setq use-package-always-ensure t)
 #+END_SRC
 
-Always compile and use fresh packages.
+Always compile and use fresh packages:
 
 #+BEGIN_SRC emacs-lisp
 (use-package auto-compile
@@ -202,14 +202,14 @@ Always compile and use fresh packages.
 
 [[https://github.com/noctuid/general.el#general-examples][manual]]
 
-Use =which-key= to help me remember keybindings.
+Use =which-key= to help me remember keybindings:
 
 #+BEGIN_SRC emacs-lisp
 (use-package which-key
   :config (which-key-mode 1))
 #+END_SRC
 
-Use =general.el= to manage all =SPC= and =,= keybindings.
+Use =general.el= to manage all =SPC= and =,= keybindings:
 
 #+BEGIN_SRC emacs-lisp
   (use-package general
@@ -279,25 +279,25 @@ Enable =evil-mode=.
      "M-l" 'evil-window-right))
 #+END_SRC
 
-Enable =surround=.
+Enable =surround=:
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-surround
   :config (global-evil-surround-mode t))
 #+END_SRC
 
-Enable =commentary=.
+Enable =commentary=:
 
 #+BEGIN_SRC emacs-lisp
 (use-package evil-commentary
   :config (evil-commentary-mode t))
 #+END_SRC
 
-** Configure =ivy= and =counsel=
+** Configure =ivy=, =counsel= and =swiper=
 
 [[http://oremacs.com/swiper/][manual]]
 
-Configure ivy completion.
+Configure ivy completion:
 
 #+BEGIN_SRC emacs-lisp
 (use-package ivy
@@ -306,7 +306,7 @@ Configure ivy completion.
   (ivy-count-format "%d/%d "))
 #+END_SRC
 
-Configure counsel search.
+Configure counsel search:
 
 #+BEGIN_SRC emacs-lisp
 (use-package counsel
@@ -326,7 +326,7 @@ Configure counsel search.
 
 [[https://github.com/wasamasa/shackle][manual]]
 
-Use shackle to keep =neotree= on the right and keep other buffers in check.
+Use shackle to keep =neotree= on the right and keep other buffers in check:
 
 #+BEGIN_SRC emacs-lisp
 (use-package shackle
@@ -342,7 +342,7 @@ Use shackle to keep =neotree= on the right and keep other buffers in check.
 
 [[https://github.com/jaypei/emacs-neotree][manual]]
 
-Neotree project dir helper function.
+Neotree project dir helper function:
 
 #+BEGIN_SRC emacs-lisp
 (defun gw/neotree-project-dir ()
@@ -358,7 +358,7 @@ Neotree project dir helper function.
                 (neotree-find file-name))))))
 #+END_SRC
 
-Use neotree with custom =vi= keybindings.
+Use neotree with custom =vi= keybindings:
 
 #+BEGIN_SRC emacs-lisp
 (use-package neotree
@@ -387,7 +387,7 @@ Use neotree with custom =vi= keybindings.
 
 [[https://www.projectile.mx/en/latest/][manual]]
 
-Configure =projectile= to use my project paths and =ivy= completion.
+Configure =projectile= to use my project paths and =ivy= completion:
 
 #+BEGIN_SRC emacs-lisp
 (use-package projectile
@@ -415,7 +415,7 @@ Configure =projectile= to use my project paths and =ivy= completion.
 
 [[https://www.flycheck.org/en/latest/][manual]]
 
-Use =flycheck= wherever possible, show errors on the side.
+Use =flycheck= wherever possible, show errors on the side:
 
 #+BEGIN_SRC emacs-lisp
 (use-package flycheck
@@ -441,7 +441,7 @@ Use =flycheck= wherever possible, show errors on the side.
 
 [[https://github.com/jacktasia/dumb-jump][manual]]
 
-Use dumb jump as the default way of jumping to stuffs.
+Use dumb jump as the default way of jumping to stuffs:
 
 #+BEGIN_SRC emacs-lisp
 (use-package dumb-jump
@@ -461,7 +461,7 @@ Use dumb jump as the default way of jumping to stuffs.
 
 [[http://company-mode.github.io/][manual]]
 
-Use company mode for auto completion.
+Use company mode for auto completion:
 
 #+BEGIN_SRC emacs-lisp
 (use-package company
@@ -474,7 +474,7 @@ Use company mode for auto completion.
 
 [[https://magit.vc/][manual]]
 
-Use =magit= to work with git repositories.
+Use =magit= to work with git repositories:
 
 #+BEGIN_SRC emacs-lisp
 (use-package magit
@@ -490,7 +490,7 @@ Use =magit= to work with git repositories.
 
 [[https://github.com/syohex/emacs-git-gutter][manual]]
 
-Use =git-gutter= to show modified lines and work with hunks.
+Use =git-gutter= to show modified lines and work with hunks:
 
 #+BEGIN_SRC emacs-lisp
 (use-package git-gutter
@@ -518,7 +518,7 @@ Use =git-gutter= to show modified lines and work with hunks.
 
 [[https://github.com/magit/git-modes][manual]]
 
-Use =.gitignore= syntax highlighting.
+Use =.gitignore= syntax highlighting:
 
 #+BEGIN_SRC emacs-lisp
 (use-package gitignore-mode
@@ -582,7 +582,7 @@ Install fonts used by =doom=
 (use-package all-the-icons)
 #+END_SRC
 
-Configure =doom= theme.
+Configure =doom= theme:
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-themes
@@ -601,7 +601,7 @@ Configure =doom= theme.
   (doom-neotree-enable-variable-pitch nil))
 #+END_SRC
 
-Configure =doom= modeline.
+Configure =doom= modeline:
 
 #+BEGIN_SRC emacs-lisp
 (use-package doom-modeline
@@ -614,7 +614,7 @@ Configure =doom= modeline.
 
 [[https://github.com/hlissner/emacs-solaire-mode][manual]]
 
-Solaire mode highlighs =real= buffers.
+Solaire mode highlighs =real= buffers:
 
 #+BEGIN_SRC emacs-lisp
 (use-package solaire-mode
@@ -626,7 +626,7 @@ Solaire mode highlighs =real= buffers.
 
 ** Rainbow
 
-Use rainbow parentheses when programming.
+Use rainbow parentheses when programming:
 
 #+BEGIN_SRC emacs-lisp
 (use-package rainbow-delimiters
