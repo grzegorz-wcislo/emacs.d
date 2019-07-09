@@ -196,6 +196,28 @@ Use =fortune= and =cowsay= to generate a philosophical welcome message:
            (rename-file filename new-name t)
            (set-visited-file-name new-name t t)))))))
 #+END_SRC
+** Kill buffer and its windows
+
+#+BEGIN_SRC emacs-lisp
+(defun gw/kill-buffer-and-its-windows (buffer)
+  "Kill BUFFER and delete its windows.  Default is `current-buffer'.
+BUFFER may be either a buffer or its name (a string)."
+  (interactive (list (read-buffer "Kill buffer: " (current-buffer) 'existing)))
+  (setq buffer  (get-buffer buffer))
+  (if (buffer-live-p buffer)            ; Kill live buffer only.
+      (let ((wins  (get-buffer-window-list buffer nil t))) ; On all frames.
+        (when (and (buffer-modified-p buffer)
+                   (fboundp '1on1-flash-ding-minibuffer-frame))
+          (1on1-flash-ding-minibuffer-frame t)) ; Defined in `oneonone.el'.
+        (when (kill-buffer buffer)      ; Only delete windows if buffer killed.
+          (dolist (win  wins)           ; (User might keep buffer if modified.)
+            (when (window-live-p win)
+              ;; Ignore error, in particular,
+              ;; "Attempt to delete the sole visible or iconified frame".
+              (condition-case nil (delete-window win) (error nil))))))
+    (when (interactive-p)
+      (error "Cannot kill buffer.  Not a live buffer: `%s'" buffer))))
+#+END_SRC
 
 * External Packages
 ** Configure =use-package=
@@ -246,7 +268,7 @@ Use =general.el= to manage all =SPC= and =,= keybindings:
       :non-normal-prefix "C-SPC")
 
     (general-create-definer comma-def
-      :states '(normal insert)
+      :states '(normal visual insert motion emacs)
       :prefix ","
       :non-normal-prefix "C-,")
 
@@ -437,6 +459,13 @@ Use shackle to keep =neotree= on the right and keep other buffers in check:
     :custom
     (shackle-rules '((neotree-mode :align left)))
     (shackle-default-rule '(:select t)))
+#+END_SRC
+
+Add helper macro:
+
+#+BEGIN_SRC emacs-lisp
+  (defmacro def-popup! (&rest params)
+    `(push ',params shackle-rules))
 #+END_SRC
 
 ** Configure =neotree=
@@ -1184,6 +1213,119 @@ Allow other modes to find executables inside project =node_modules=:
 (use-package restclient
   :custom
   (restclient-inhibit-cookies t))
+#+END_SRC
+
+** Ruby
+
+Setup =ruby-mode=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package ruby-mode
+    :custom
+    (ruby-insert-encoding-magic-comment nil)
+
+    :general
+    (comma-def
+      :keymaps 'ruby-mode-map
+      "q"  '((lambda ()
+               (interactive)
+               (progn
+                 (gw/kill-buffer-and-its-windows "*Bundler*")
+                 (gw/kill-buffer-and-its-windows "*rspec-compilation*")))
+             :which-key "Close popups")))
+#+END_SRC
+
+Setup =robe=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package robe
+    :config
+    (add-hook 'ruby-mode-hook 'robe-mode)
+    (eval-after-load 'company
+      '(push 'company-robe company-backends))
+
+    :general
+    (comma-def
+      :keymaps 'ruby-mode-map
+       "j"   '(robe-jump :which-key "jump")
+       "d"   '(robe-doc :which-key "docs")))
+#+END_SRC
+
+Setup =inf-ruby=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package inf-ruby)
+#+END_SRC
+
+Setup =bundler=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package bundler
+    :config
+    (def-popup! "\\*Bundler\\*" :align below :size 14 :noselect t :regexp t :popup t)
+
+    :general
+    (comma-def
+      :keymaps 'ruby-mode-map
+       "b"   '(:ignore t :which-key "Bundle")
+       "bi"  '(bundle-install :which-key "install")
+       "bo"  '(bundle-open :which-key "open")
+       "be"  '(bundle-exec :which-key "exec")
+       "bc"  '(bundle-console :which-key "console")
+       "bu"  '(bundle-update :which-key "update")))
+#+END_SRC
+
+Setup =rspec-mode=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rspec-mode
+    :config
+    (def-popup! "\\*rspec-compilation\\*" :align below :size 14 :noselect t :regexp t :popup t)
+
+    :general
+    (comma-def
+      :keymaps 'ruby-mode-map
+       "t"   '(:ignore t :which-key "Test")
+       "ta"  '(rspec-verify-all :which-key "verify all")
+       "tb"  '(rspec-verify :which-key "verify")
+       "tl"  '(rspec-run-last-failed :which-key "run last failed")
+       "tr"  '(rspec-rerun :which-key "rerun")
+       "tt"  '(rspec-verify-single :which-key "verify single")))
+#+END_SRC
+
+Setup =projectile-rails=:
+
+https://github.com/asok/projectile-rails
+
+#+BEGIN_SRC emacs-lisp
+  (use-package projectile-rails
+    :config
+    (projectile-rails-global-mode)
+
+    :general
+    (comma-def
+      :keymaps 'ruby-mode-map
+       "f"   '(:ignore t :which-key "Find")
+       "fm"  '(projectile-rails-find-model :which-key "model")
+       "fM"  '(projectile-rails-find-current-model :which-key "current model")
+       "fc"  '(projectile-rails-find-controller :which-key "controller")
+       "fC"  '(projectile-rails-find-current-controller :which-key "current controller")
+       "fv"  '(projectile-rails-find-view :which-key "view")
+       "fV"  '(projectile-rails-find-current-view :which-key "current view")
+       "fh"  '(projectile-rails-find-helper :which-key "helper")
+       "fH"  '(projectile-rails-find-current-helper :which-key "current helper")
+       "ft"  '(projectile-rails-find-spec :which-key "test")
+       "fT"  '(projectile-rails-find-current-spec :which-key "current test")
+       "a"   '(projectile-rails-find-current-spec :which-key "current test")
+       "fn"  '(projectile-rails-find-migration :which-key "migration")
+       "fN"  '(projectile-rails-find-current-migration :which-key "current migration")
+
+       "g"   '(:ignore t :which-key "Goto")
+       "gg"  '(projectile-rails-goto-gemfile :which-key "gemfile")
+       "gr"  '(projectile-rails-goto-routes :which-key "routes")
+       "gd"  '(projectile-rails-goto-schema :which-key "schema")
+       "gs"  '(projectile-rails-goto-seeds :which-key "seeds")
+       "gh"  '(projectile-rails-goto-spec-helper :which-key "spec helper")))
 #+END_SRC
 
 ** Scala
