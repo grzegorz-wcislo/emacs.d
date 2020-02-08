@@ -1328,6 +1328,12 @@ https://github.com/asok/projectile-rails
        "gh"  '(projectile-rails-goto-spec-helper :which-key "spec helper")))
 #+END_SRC
 
+** Rust
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rust-mode)
+#+END_SRC
+
 ** Scala
 
 #+BEGIN_SRC emacs-lisp
