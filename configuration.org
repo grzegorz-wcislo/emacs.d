@@ -40,6 +40,13 @@ Backup files to =/tmp= directory instead of the same directory as the file:
         `((".*" ,temporary-file-directory t)))
 #+END_SRC
 
+Set path:
+
+#+BEGIN_SRC emacs-lisp
+  (when (memq window-system '(mac ns x))
+    (exec-path-from-shell-initialize))
+#+END_SRC
+
 ** Editing text
 
 Use tabs instead of spaces:
@@ -84,7 +91,7 @@ Disable line wrap:
 Set font:
 
 #+BEGIN_SRC emacs-lisp
-  (add-to-list 'default-frame-alist '(font . "GohuFont"))
+  (add-to-list 'default-frame-alist '(font . "Fira Code"))
   (setq-default line-spacing nil)
 #+END_SRC
 
@@ -539,7 +546,7 @@ Configure =projectile= to use my project paths and =ivy= completion:
   (use-package projectile
     :after (ivy)
     :custom
-    (projectile-project-search-path '("~/Personal_Projects/" "~/University/" "~/Work"))
+    (projectile-project-search-path '("~/Documents/" "~/Upside/"))
     (projectile-command-map nil)
     (projectile-completion-system 'ivy)
 
@@ -672,6 +679,7 @@ Use =magit= to work with git repositories:
      "gC"  'magit-commit
      "gd"  'magit-diff-unstaged
      "gD"  'magit-diff-staged
+     "gb"  'magit-blame
      "gl"  'magit-log-current))
 
   (use-package evil-magit
@@ -824,8 +832,6 @@ Allow babel to evaluate source blocks:
    'org-babel-load-languages
    '((emacs-lisp . t)
      (shell . t)
-     (python . t)
-     (ipython . t)
      (ruby . t)))
 #+END_SRC
 
@@ -1074,36 +1080,6 @@ Use ssh as default =TRAMP= method:
 #+END_SRC
 
 * Programming languages
-** Language Server Protocol
-
-#+BEGIN_SRC emacs-lisp
-  (use-package lsp-mode
-	:ensure t
-	:config
-
-	;; change nil to 't to enable logging of packets between emacs and the LS
-	;; this was invaluable for debugging communication with the MS Python Language Server
-	;; and comparing this with what vs.code is doing
-	(setq lsp-print-io nil)
-
-	;; lsp-ui gives us the blue documentation boxes and the sidebar info
-	(use-package lsp-ui
-	  :ensure t
-	  :config
-	  (setq lsp-ui-sideline-ignore-duplicate t)
-	  (add-hook 'lsp-mode-hook 'lsp-ui-mode))
-
-	;; make sure we have lsp-imenu everywhere we have LSP
-	;; (require 'lsp-imenu)
-	;; (add-hook 'lsp-after-open-hook 'lsp-enable-imenu)
-
-	;; install LSP company backend for LSP-driven completion
-	(use-package company-lsp
-	  :ensure t
-	  :config
-	  (push 'company-lsp company-backends)))
-#+END_SRC
-
 ** C
 
 Setup indentation:
@@ -1201,12 +1177,6 @@ Allow other modes to find executables inside project =node_modules=:
     :ensure auctex)
 #+END_SRC
 
-** Python
-
-#+BEGIN_SRC emacs-lisp
-  (use-package ob-ipython)
-#+END_SRC
-
 ** =restclient-mode=
 
 #+BEGIN_SRC emacs-lisp
@@ -1231,7 +1201,8 @@ Setup =ruby-mode=:
                (interactive)
                (progn
                  (gw/kill-buffer-and-its-windows "*Bundler*")
-                 (gw/kill-buffer-and-its-windows "*rspec-compilation*")))
+                 (gw/kill-buffer-and-its-windows "*rspec-compilation*")
+                 (gw/kill-buffer-and-its-windows "*RuboCop.+*")))
              :which-key "Close popups")))
 #+END_SRC
 
@@ -1249,6 +1220,14 @@ Setup =robe=:
       :keymaps 'ruby-mode-map
        "j"   '(robe-jump :which-key "jump")
        "d"   '(robe-doc :which-key "docs")))
+#+END_SRC
+
+Setup =rvm=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rvm
+    :config
+    (rvm-autodetect-ruby))
 #+END_SRC
 
 Setup =inf-ruby=:
@@ -1284,13 +1263,30 @@ Setup =rspec-mode=:
 
     :general
     (comma-def
-      :keymaps 'ruby-mode-map
+      :keymaps '(rspec-mode-keymap ruby-mode-map)
        "t"   '(:ignore t :which-key "Test")
        "ta"  '(rspec-verify-all :which-key "verify all")
        "tb"  '(rspec-verify :which-key "verify")
        "tl"  '(rspec-run-last-failed :which-key "run last failed")
        "tr"  '(rspec-rerun :which-key "rerun")
        "tt"  '(rspec-verify-single :which-key "verify single")))
+#+END_SRC
+
+Setup =rubocop=:
+
+#+BEGIN_SRC emacs-lisp
+  (use-package rubocop
+    :config
+    (def-popup! "\\*RuboCop.+\\*" :align below :size 14 :select t :regexp t)
+    (add-hook 'ruby-mode-hook #'rubocop-mode)
+
+    :general
+    (comma-def
+      :keymaps 'ruby-mode-map
+       "r"   '(:ignore t :which-key "Rubocop")
+       "rp"  '(rubocop-check-project :which-key "check project")
+       "rr"  '(rubocop-check-current-file    :which-key "check file")
+       "ra"  '(rubocop-autocorrect-current-file :which-key "autocorrect file")))
 #+END_SRC
 
 Setup =projectile-rails=:
@@ -1304,7 +1300,7 @@ https://github.com/asok/projectile-rails
 
     :general
     (comma-def
-      :keymaps 'ruby-mode-map
+      :keymaps '(projectile-rails-mode-map ruby-mode-map)
        "f"   '(:ignore t :which-key "Find")
        "fm"  '(projectile-rails-find-model :which-key "model")
        "fM"  '(projectile-rails-find-current-model :which-key "current model")
@@ -1326,14 +1322,6 @@ https://github.com/asok/projectile-rails
        "gd"  '(projectile-rails-goto-schema :which-key "schema")
        "gs"  '(projectile-rails-goto-seeds :which-key "seeds")
        "gh"  '(projectile-rails-goto-spec-helper :which-key "spec helper")))
-#+END_SRC
-
-** Scala
-
-#+BEGIN_SRC emacs-lisp
-  (use-package scala-mode
-	:interpreter
-	("scala" . scala-mode))
 #+END_SRC
 
 ** TypeScript
@@ -1448,7 +1436,7 @@ Configure =doom= theme:
     :custom
     (doom-themes-enable-bold t)
     (doom-themes-enable-italic t)
-    (doom-neotree-file-icons 1)
+    (doom-themes-neotree-file-icons 1)
     (doom-neotree-enable-variable-pitch nil))
 #+END_SRC
 
@@ -1477,6 +1465,7 @@ Solaire mode highlighs =real= buffers:
     :hook
     ((change-major-mode after-revert ediff-prepare-buffer) . turn-on-solaire-mode)
     :config
+    (solaire-global-mode)
     (add-hook 'minibuffer-setup-hook #'solaire-mode-in-minibuffer))
 #+END_SRC
 
